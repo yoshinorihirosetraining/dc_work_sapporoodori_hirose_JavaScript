@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピアノアプリ</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        #container {
+            width: 700px;
+        }
+
+        #autoplay-display {
+            display: block;
+            font-size: 18px;
+            line-height: 50px;
+            height: 50px;
+            text-align: center;
+            margin: 0 0;
+        }
+
+        #display {
+            display: block;
+            background-color: aquamarine;
+            color: green;
+            font-size: 36px;
+            line-height: 100px;
+            height: 100px;
+            text-align: center;
+            margin: 0 0;
+        }
+
+        #keyboard-line {
+            display: flex;
+        }
+
+        .keyboard {
+            border: 3px solid #ccc;
+            margin-left: 3px;
+            margin-right: 3px;
+            width: 91px;
+            text-align: center;
+            font-size: 32px;
+            line-height: 91px;
+        }
+    </style>
+    <script>
+        const SCORE_TWINKLE = `
+        ド(0.5秒)休符(0.5秒)ド(0.5秒)休符(0.5秒)ソ(0.5秒)休符(0.5秒)ソ(0.5秒)休符(0.5秒)
+ラ(0.5秒)休符(0.5秒)ラ(0.5秒)休符(0.5秒)ソ(2秒)
+ファ(0.5秒)休符(0.5秒)ファ(0.5秒)休符(0.5秒)ミ(0.5秒)休符(0.5秒)ミ(0.5秒)休符(0.5秒)
+レ(0.5秒)休符(0.5秒)レ(0.5秒)休符(0.5秒)ド(2秒)
+
+ソ(0.5秒)休符(0.5秒)ソ(0.5秒)休符(0.5秒)ファ(0.5秒)休符(0.5秒)ファ(0.5秒)休符(0.5秒)
+ミ(0.5秒)休符(0.5秒)ミ(0.5秒)休符(0.5秒)レ(2秒)
+ソ(0.5秒)休符(0.5秒)ソ(0.5秒)休符(0.5秒)ファ(0.5秒)休符(0.5秒)ファ(0.5秒)休符(0.5秒)
+ミ(0.5秒)休符(0.5秒)ミ(0.5秒)休符(0.5秒)レ(2秒)
+
+ド(0.5秒)休符(0.5秒)ド(0.5秒)休符(0.5秒)ソ(0.5秒)休符(0.5秒)ソ(0.5秒)休符(0.5秒)
+ラ(0.5秒)休符(0.5秒)ラ(0.5秒)休符(0.5秒)ソ(2秒)
+ファ(0.5秒)休符(0.5秒)ファ(0.5秒)休符(0.5秒)ミ(0.5秒)休符(0.5秒)ミ(0.5秒)休符(0.5秒)
+レ(0.5秒)休符(0.5秒)レ(0.5秒)休符(0.5秒)ド(4秒)
+        `;
+
+        const SCORE_TULIP = `
+        ド(0.5秒)レ(0.5秒)ミ(1秒)ド(0.5秒)レ(0.5秒)ミ(1秒)
+ソ(0.5秒)ミ(0.5秒)レ(0.5秒)ド(0.5秒)レ(0.5秒)ミ(0.5秒)レ(1秒)
+ド(0.5秒)レ(0.5秒)ミ(1秒)ド(0.5秒)レ(0.5秒)ミ(1秒)ソ(0.5秒)ミ(0.5秒)レ(0.5秒)ド(0.5秒)レ(0.5秒)ミ(0.5秒)ド(1秒)
+ソ(0.25秒)休符(0.25秒)ソ(0.25秒)休符(0.25秒)ミ(0.25秒)休符(0.25秒)ソ(0.25秒)休符(0.25秒)
+ラ(0.25秒)休符(0.25秒)ラ(0.25秒)休符(0.25秒)ソ(1秒)
+ミ(0.25秒)休符(0.25秒)ミ(0.25秒)休符(0.25秒)レ(0.25秒)休符(0.25秒)レ(0.25秒)休符(0.25秒)ド(4秒)
+        `;
+
+        function simplifyScore(score) {
+            let ab = score
+                .replaceAll('ファ', 'フ')
+                .replaceAll('(0.25秒)', '1')
+                .replaceAll('(0.5秒)', '2')
+                .replaceAll('(1秒)', '4')
+                .replaceAll('(2秒)', '8')
+                .replaceAll('(4秒)', '$')
+                .replaceAll('休符', '休')
+                .replaceAll("\n", "")
+                .replaceAll(" ", "");
+            let aa = "";
+            while (ab.length !== 0) {
+                let a = ab[0];
+                let b = ab[1];
+                if (b === '$') {
+                    b = 16;
+                }
+                aa = aa + a.repeat(b);
+                ab = ab.substring(2);
+            }
+            return aa;
+        }
+
+        const SPEED_NORMAL = 0;
+        const SPEED_SLOW = 1;
+
+        const INTERVAL_NORMAL = 250;
+        const INTERVAL_SLOW = 500;
+
+        const STATE_IDLE = 0;
+        const STATE_MANUAL = 1;
+        const STATE_AUTO = 2;
+
+        let speed = SPEED_NORMAL;
+        let state = STATE_IDLE;
+        let timer = null;
+
+        let autoplayDisplay, display, autoButton, slowButton;
+        let do1, re, mi, fa, sol, la, si;
+
+        window.addEventListener('load', () => {
+            autoplayDisplay = document.getElementById('autoplay-display');
+            display = document.getElementById('display');
+            autoButton = document.getElementById('auto-button');
+            slowButton = document.getElementById('slow-button');
+            do1 = document.getElementById('do');
+            re = document.getElementById('re');
+            mi = document.getElementById('mi');
+            fa = document.getElementById('fa');
+            sol = document.getElementById('sol');
+            la = document.getElementById('la');
+            si = document.getElementById('si');
+
+            function getToneName(nameInScore) {
+                if (nameInScore === '休') {
+                    return '';
+                } else if (nameInScore === 'フ') {
+                    return 'ファ';
+                }
+                return nameInScore;
+            }
+
+            autoButton.addEventListener('click', () => {
+                if (state !== STATE_AUTO) {
+                    if (state === STATE_MANUAL) {
+                        clearTimeout(timer);
+                    }
+                    state = STATE_AUTO;
+                    let score = null;
+                    if (Math.random() < 0.5) {
+                        autoplayDisplay.textContent = "演奏：キラキラ星";
+                        score = simplifyScore(SCORE_TWINKLE);
+                    } else {
+                        autoplayDisplay.textContent = "演奏：チューリップ";
+                        score = simplifyScore(SCORE_TULIP);
+                    }
+                    display.textContent = getToneName(score[0]);
+                    score = score.substring(1);
+                    autoButton.value = "演奏中止";
+
+                    let interval = INTERVAL_NORMAL;
+                    if (speed === SPEED_SLOW) {
+                        interval = INTERVAL_SLOW;
+                    }
+
+                    timer = setInterval(() => {
+                        if (score.length === 0) {
+                            clearInterval(timer);
+                            autoplayDisplay.textContent = "";
+                            display.textContent = "";
+                            state = STATE_IDLE;
+                            return;
+                        }
+                        display.textContent = getToneName(score[0]);
+                        score = score.substring(1);
+                    }, interval);
+                } else {
+                    clearInterval(timer);
+                    autoplayDisplay.textContent = "";
+                    display.textContent = "";
+                    autoButton.value = "自動演奏";
+                    state = STATE_IDLE;
+                }
+            });
+
+            slowButton.addEventListener('click', () => {
+                if (speed === SPEED_NORMAL) {
+                    speed = SPEED_SLOW;
+                    slowButton.value = "速くする";
+                } else {
+                    speed = SPEED_NORMAL;
+                    slowButton.value = "遅くする";
+                }
+            });
+
+            let onClickKeyboard = (name1) => {
+                return () => {
+                    if (state === STATE_AUTO) {
+                        return;
+                    }
+                    display.textContent = name1;
+                    
+                    if (state === STATE_MANUAL) {
+                        clearTimeout(timer);
+                    }
+                    state = STATE_MANUAL;
+                    timer = setTimeout(() => {
+                        display.textContent = "";
+                        state = STATE_IDLE;
+                    }, 1000);
+                };
+            };
+
+            do1.addEventListener('click', onClickKeyboard('ド'));
+            re.addEventListener('click', onClickKeyboard('レ'));
+            mi.addEventListener('click', onClickKeyboard('ミ'));
+            fa.addEventListener('click', onClickKeyboard('ファ'));
+            sol.addEventListener('click', onClickKeyboard('ソ'));
+            la.addEventListener('click', onClickKeyboard('ラ'));
+            si.addEventListener('click', onClickKeyboard('シ'));
+
+        });
+    </script>
+</head>
+<body>
+    <div id="container">
+        <p id="autoplay-display"></p>
+        <p id="display"></p>
+        <input id="auto-button" type="submit" value="自動演奏">
+        <input id="slow-button" type="submit" value="遅くする">
+        <div id="keyboard-line">
+            <div class="keyboard" id="do">ド</div>
+            <div class="keyboard" id="re">レ</div>
+            <div class="keyboard" id="mi">ミ</div>
+            <div class="keyboard" id="fa">ファ</div>
+            <div class="keyboard" id="sol">ソ</div>
+            <div class="keyboard" id="la">ラ</div>
+            <div class="keyboard" id="si">シ</div>
+        </div>
+    </div>
+</body>
+</html>
