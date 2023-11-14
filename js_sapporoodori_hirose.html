@@ -75,35 +75,12 @@
 ミ(0.25秒)休符(0.25秒)ミ(0.25秒)休符(0.25秒)レ(0.25秒)休符(0.25秒)レ(0.25秒)休符(0.25秒)ド(4秒)
         `;
 
-        function simplifyScore(score) {
-            let ab = score
-                .replaceAll('ファ', 'フ')
-                .replaceAll('(0.25秒)', '1')
-                .replaceAll('(0.5秒)', '2')
-                .replaceAll('(1秒)', '4')
-                .replaceAll('(2秒)', '8')
-                .replaceAll('(4秒)', '$')
-                .replaceAll('休符', '休')
-                .replaceAll("\n", "")
-                .replaceAll(" ", "");
-            let aa = "";
-            while (ab.length !== 0) {
-                let a = ab[0];
-                let b = ab[1];
-                if (b === '$') {
-                    b = 16;
-                }
-                aa = aa + a.repeat(b);
-                ab = ab.substring(2);
-            }
-            return aa;
+        function decodeScore(score) {
+            return [...a.matchAll(/\((\d+|\d+\.\d+)秒\)([ドレミソラシ]|ファ|休符)/g)];
         }
 
         const SPEED_NORMAL = 0;
         const SPEED_SLOW = 1;
-
-        const INTERVAL_NORMAL = 250;
-        const INTERVAL_SLOW = 500;
 
         const STATE_IDLE = 0;
         const STATE_MANUAL = 1;
@@ -122,10 +99,8 @@
             slowButton = document.getElementById('slow-button');
 
             function getToneName(nameInScore) {
-                if (nameInScore === '休') {
+                if (nameInScore === '休符') {
                     return '';
-                } else if (nameInScore === 'フ') {
-                    return 'ファ';
                 }
                 return nameInScore;
             }
@@ -139,33 +114,39 @@
                     let score = null;
                     if (Math.random() < 0.5) {
                         autoplayDisplay.textContent = "演奏：キラキラ星";
-                        score = simplifyScore(SCORE_TWINKLE);
+                        score = decodeScore(SCORE_TWINKLE);
                     } else {
                         autoplayDisplay.textContent = "演奏：チューリップ";
-                        score = simplifyScore(SCORE_TULIP);
+                        score = decodeScore(SCORE_TULIP);
                     }
-                    display.textContent = getToneName(score[0]);
-                    score = score.substring(1);
+                    display.textContent = getToneName(score[0][2]);
+                    
                     autoButton.value = "演奏中止";
 
-                    let interval = INTERVAL_NORMAL;
-                    if (speed === SPEED_SLOW) {
-                        interval = INTERVAL_SLOW;
-                    }
+                    let renew = () => {
+                        clearTimeout(timer);
+                        renew2();
+                    };
 
-                    timer = setInterval(() => {
+                    let renew2 = () => {
                         if (score.length === 0) {
-                            clearInterval(timer);
                             autoplayDisplay.textContent = "";
                             display.textContent = "";
                             state = STATE_IDLE;
                             return;
                         }
-                        display.textContent = getToneName(score[0]);
-                        score = score.substring(1);
-                    }, interval);
+                        display.textContent = getToneName(score[0][2]);
+                        let toneLength = score[0][1] * 1000;
+                        score.shift();
+                        if (speed == SPEED_SLOW) {
+                            toneLength *= 2;
+                        }
+                        timer = setTimeout(renew, toneLength);
+                    };
+
+                    renew2();
                 } else {
-                    clearInterval(timer);
+                    clearTimeout(timer);
                     autoplayDisplay.textContent = "";
                     display.textContent = "";
                     autoButton.value = "自動演奏";
