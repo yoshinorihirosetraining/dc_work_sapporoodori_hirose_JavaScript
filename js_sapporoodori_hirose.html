@@ -114,20 +114,12 @@
         let timer = null;
 
         let autoplayDisplay, display, autoButton, slowButton;
-        let do1, re, mi, fa, sol, la, si;
 
         window.addEventListener('load', () => {
             autoplayDisplay = document.getElementById('autoplay-display');
             display = document.getElementById('display');
             autoButton = document.getElementById('auto-button');
             slowButton = document.getElementById('slow-button');
-            do1 = document.getElementById('do');
-            re = document.getElementById('re');
-            mi = document.getElementById('mi');
-            fa = document.getElementById('fa');
-            sol = document.getElementById('sol');
-            la = document.getElementById('la');
-            si = document.getElementById('si');
 
             function getToneName(nameInScore) {
                 if (nameInScore === '休') {
@@ -221,13 +213,13 @@
         <input id="auto-button" type="submit" value="自動演奏">
         <input id="slow-button" type="submit" value="遅くする">
         <div id="keyboard-line">
-            <div class="keyboard" id="do">ド</div>
-            <div class="keyboard" id="re">レ</div>
-            <div class="keyboard" id="mi">ミ</div>
-            <div class="keyboard" id="fa">ファ</div>
-            <div class="keyboard" id="sol">ソ</div>
-            <div class="keyboard" id="la">ラ</div>
-            <div class="keyboard" id="si">シ</div>
+            <div class="keyboard">ド</div>
+            <div class="keyboard">レ</div>
+            <div class="keyboard">ミ</div>
+            <div class="keyboard">ファ</div>
+            <div class="keyboard">ソ</div>
+            <div class="keyboard">ラ</div>
+            <div class="keyboard">シ</div>
         </div>
     </div>
 </body>
