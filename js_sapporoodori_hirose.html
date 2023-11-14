@@ -191,12 +191,12 @@
                 }
             });
 
-            let onClickKeyboard = (name1) => {
-                return () => {
+            function onClickKeyboard(event) {
                     if (state === STATE_AUTO) {
                         return;
                     }
-                    display.textContent = name1;
+                    const keyName = event.target.textContent;
+                    display.textContent = keyName;
                     
                     if (state === STATE_MANUAL) {
                         clearTimeout(timer);
@@ -206,17 +206,11 @@
                         display.textContent = "";
                         state = STATE_IDLE;
                     }, 1000);
-                };
             };
 
-            do1.addEventListener('click', onClickKeyboard('ド'));
-            re.addEventListener('click', onClickKeyboard('レ'));
-            mi.addEventListener('click', onClickKeyboard('ミ'));
-            fa.addEventListener('click', onClickKeyboard('ファ'));
-            sol.addEventListener('click', onClickKeyboard('ソ'));
-            la.addEventListener('click', onClickKeyboard('ラ'));
-            si.addEventListener('click', onClickKeyboard('シ'));
-
+            document.querySelectorAll('.keyboard').forEach(key => {
+                key.addEventListener('click', onClickKeyboard);
+            });
         });
     </script>
 </head>
