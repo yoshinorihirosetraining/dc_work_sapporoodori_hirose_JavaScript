@@ -76,7 +76,7 @@
         `;
 
         function decodeScore(score) {
-            return [...a.matchAll(/\((\d+|\d+\.\d+)秒\)([ドレミソラシ]|ファ|休符)/g)];
+            return [...score.matchAll(/([ドレミソラシ]|ファ|休符)\((\d+|\d+\.\d+)秒\)/g)];
         }
 
         const SPEED_NORMAL = 0;
@@ -119,7 +119,7 @@
                         autoplayDisplay.textContent = "演奏：チューリップ";
                         score = decodeScore(SCORE_TULIP);
                     }
-                    display.textContent = getToneName(score[0][2]);
+                    display.textContent = getToneName(score[0][1]);
                     
                     autoButton.value = "演奏中止";
 
@@ -135,8 +135,8 @@
                             state = STATE_IDLE;
                             return;
                         }
-                        display.textContent = getToneName(score[0][2]);
-                        let toneLength = score[0][1] * 1000;
+                        display.textContent = getToneName(score[0][1]);
+                        let toneLength = score[0][2] * 1000;
                         score.shift();
                         if (speed == SPEED_SLOW) {
                             toneLength *= 2;
