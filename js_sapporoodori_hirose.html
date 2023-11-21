@@ -123,12 +123,12 @@
                     
                     autoButton.value = "演奏中止";
 
-                    let renew = () => {
+                    let prepareNextNote = () => {
                         clearTimeout(timer);
-                        renew2();
+                        playCurrentNote();
                     };
 
-                    let renew2 = () => {
+                    let playCurrentNote = () => {
                         if (score.length === 0) {
                             autoplayDisplay.textContent = "";
                             display.textContent = "";
@@ -141,10 +141,10 @@
                         if (speed == SPEED_SLOW) {
                             toneLength *= 2;
                         }
-                        timer = setTimeout(renew, toneLength);
+                        timer = setTimeout(prepareNextNote, toneLength);
                     };
 
-                    renew2();
+                    playCurrentNote();
                 } else {
                     clearTimeout(timer);
                     autoplayDisplay.textContent = "";
